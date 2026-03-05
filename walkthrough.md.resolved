@@ -1,0 +1,51 @@
+# Project Walkthrough: Multi-Agent Strategic Planning Platform
+
+A complete strategic platform for college applicants featuring multi-agent AI planning, dual RAG retrieval, and strict data isolation.
+
+## 1. Authentication & Security
+- **JWT Provider**: Secure registration, login, and profile isolation.
+- **Data Isolation**: Every API endpoint enforces `student_id` extracted from the JWT.
+- **Auto-Logout**: Frontend detects token expiry via Axios interceptors and redirects to login.
+
+## 2. AI & Planning Systems
+- **Multi-Agent Planner**: Built with **LangGraph**, using a 5-agent specialist mesh:
+    - `Strategist`: Overall 4-year roadmap.
+    - `Academic Advisor`: Course recommendations.
+    - `Activities Coach`: Extracurricular suggestions.
+    - `Research Agent`: University data synthesis.
+    - `Timeline Manager`: Automated milestone generation.
+- **Student Memory**: Isolated persistence using **Mem0**, tracking courses, activities, and goals.
+
+## 3. Dual RAG Retrieval
+- **Shared Index**: `university-data` for common admission stats/deadlines.
+- **Private Index**: `student-documents` for personal transcripts or essays, filtered by `student_id` metadata.
+
+## 4. Premium Frontend Interface
+- **Dashboard**: High-level track progress and upcoming milestones.
+- **Chat**: Real-time interaction with the AI Advisor (Context-Aware).
+- **Strategic Plan**: Interactive 4-year roadmap with goal tracking.
+- **Academics**: CRUD management for course history and activity impact.
+
+## System Architecture
+```mermaid
+graph TD
+    UI[React Frontend] --> API[FastAPI Layer]
+    API --> Auth[JWT Isolation]
+    API --> Agents[LangGraph Multi-Agent]
+    Agents --> LLM[GPT-4o]
+    Agents --> RAG[Dual Pinecone RAG]
+    Agents --> Mem[Mem0 Memory]
+    Auth --> DB[(PostgreSQL)]
+```
+
+## How to Run
+
+### Backend
+1. `pip install -r requirements.txt`
+2. Configure [.env](file:///d:/projects/project_1_ai_agent/frontend/.env) (OpenAI, Pinecone, Mem0 keys).
+3. `uvicorn api.main:app --reload`
+
+### Frontend
+1. `cd frontend`
+2. `npm install`
+3. `npm run dev`
