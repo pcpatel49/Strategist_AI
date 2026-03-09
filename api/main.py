@@ -52,3 +52,5 @@ def read_root():
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy"}
+
+# Trigger Uvicorn reload to pick up new dependencies

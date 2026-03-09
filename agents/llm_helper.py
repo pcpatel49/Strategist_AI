@@ -43,6 +43,10 @@ def call_llm(
         return response.choices[0].message.content or ""
     except Exception as exc:  # noqa: BLE001
         logger.error(f"[LLM] call failed: {exc}")
+        if "insufficient_quota" in str(exc) or "429" in str(exc):
+            return '{"error": "OpenAI API Quota Exceeded. Please check your billing details."}'
+        if "invalid_api_key" in str(exc) or "401" in str(exc):
+            return '{"error": "Invalid OpenAI API Key. Please check your .env file."}'
         return f"[LLM ERROR] {exc}"
 
 

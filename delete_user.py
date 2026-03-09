@@ -1,7 +1,11 @@
 import sys
-from sqlalchemy import create_engine, text
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
+
+# Ensure we import the models so SQLAlchemy knows about them
+from database.models import User, Student
 
 def delete_user(email):
     load_dotenv()
@@ -12,28 +16,29 @@ def delete_user(email):
 
     try:
         engine = create_engine(db_url)
-        with engine.connect() as conn:
-            # Check if user exists
-            result = conn.execute(text(f"SELECT id FROM users WHERE email = '{email}'"))
-            user = result.fetchone()
-            
-            if not user:
-                print(f"User with email '{email}' not found.")
-                return
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        session = SessionLocal()
 
-            user_id = user[0]
-            
-            # Delete from students first (foreign key constraint)
-            # Note: If CASCADE is set on DB level, deleting user is enough. 
-            # But let's be explicit for safety.
-            conn.execute(text(f"DELETE FROM students WHERE student_id = '{user_id}'"))
-            conn.execute(text(f"DELETE FROM users WHERE id = '{user_id}'"))
-            
-            conn.commit()
-            print(f"Successfully deleted user and student profile for: {email}")
+        # Find user by email
+        user = session.query(User).filter(User.email == email).first()
+        
+        if not user:
+            print(f"User with email '{email}' not found.")
+            session.close()
+            return
+
+        # Delete the user. Because we have cascade="all, delete-orphan" on the relationships
+        # in models.py, this will correctly delete the Student, Courses, Activities, etc.
+        session.delete(user)
+        session.commit()
+        
+        print(f"Successfully deleted user and all associated data for: {email}")
 
     except Exception as e:
+        session.rollback()
         print(f"Error: {e}")
+    finally:
+        session.close()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

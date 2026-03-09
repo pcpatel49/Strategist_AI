@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from openai import OpenAI, AsyncOpenAI
 from typing import Any, AsyncGenerator
 
 logger = logging.getLogger(__name__)
@@ -79,51 +80,50 @@ async def stream_chat_with_ai(
 # OpenAI implementation (comment in when OPENAI_API_KEY is present)
 # ---------------------------------------------------------------------------
 def _call_openai(context: dict[str, Any], user_message: str) -> str:
-    """
-    Synchronous OpenAI call.  Wire-up example:
-
-    from openai import OpenAI
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    messages = [
-        {"role": "system", "content": build_system_prompt(context)},
-        *context["chat_history"],
-        {"role": "user", "content": user_message},
-    ]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,
-        temperature=0.7,
-    )
-    return response.choices[0].message.content
-    """
-    # ── Stub (remove when real key is available) ─────────────────────────────
-    raise NotImplementedError("OpenAI not configured — falling back to stub")
+    try:
+        messages = [
+            {"role": "system", "content": build_system_prompt(context)},
+            *context["chat_history"],
+            {"role": "user", "content": user_message},
+        ]
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            temperature=0.7,
+        )
+        return response.choices[0].message.content or ""
+    except Exception as exc:
+        if "insufficient_quota" in str(exc) or "429" in str(exc):
+            return '{"error": "OpenAI API Quota Exceeded. Please check your billing details."}'
+        if "invalid_api_key" in str(exc) or "401" in str(exc):
+            return '{"error": "Invalid OpenAI API Key. Please check your .env file."}'
+        raise exc
 
 
 async def _stream_openai(
     context: dict[str, Any], user_message: str
 ) -> AsyncGenerator[str, None]:
-    """
-    Async streaming OpenAI call.  Wire-up example:
-
-    from openai import AsyncOpenAI
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    messages = [
-        {"role": "system", "content": build_system_prompt(context)},
-        *context["chat_history"],
-        {"role": "user", "content": user_message},
-    ]
-    async with client.chat.completions.stream(
-        model="gpt-4o",
-        messages=messages,
-    ) as stream:
-        async for text in stream.text_stream:
-            yield text
-    """
-    raise NotImplementedError("OpenAI streaming not configured")
-    yield  # makes this an async generator even before wiring
+    try:
+        messages = [
+            {"role": "system", "content": build_system_prompt(context)},
+            *context["chat_history"],
+            {"role": "user", "content": user_message},
+        ]
+        async with client.chat.completions.stream(
+            model="gpt-4o",
+            messages=messages,
+        ) as stream:
+            async for text in stream.text_stream:
+                yield text
+    except Exception as exc:
+        if "insufficient_quota" in str(exc) or "429" in str(exc):
+            yield '{"error": "OpenAI API Quota Exceeded. Please check your billing details."}'
+        elif "invalid_api_key" in str(exc) or "401" in str(exc):
+            yield '{"error": "Invalid OpenAI API Key. Please check your .env file."}'
+        else:
+            raise exc
 
 
 # ---------------------------------------------------------------------------

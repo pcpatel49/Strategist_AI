@@ -53,5 +53,8 @@ def get_embedding(text: str) -> list[float]:
         )
         return response.data[0].embedding
     except Exception as exc:  # noqa: BLE001
-        logger.error(f"Embedding failed: {exc}")
+        if "invalid_api_key" in str(exc) or "401" in str(exc):
+            logger.error(f"Embedding failed: Invalid OpenAI API Key. Please check your .env file. Details: {exc}")
+        else:
+            logger.error(f"Embedding failed: {exc}")
         return [0.0] * EMBEDDING_DIMENSION

@@ -108,7 +108,7 @@ class StudentMemoryManager:
             return []
 
         try:
-            results = client.search(query, user_id=student_id, limit=limit)
+            results = client.search(query, filters={"user_id": student_id}, limit=limit)
             return results if isinstance(results, list) else []
         except Exception as exc:  # noqa: BLE001
             logger.error(f"[Mem0] search_memory failed for {student_id}: {exc}")

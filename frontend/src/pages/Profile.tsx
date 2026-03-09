@@ -15,7 +15,7 @@ export const Profile = () => {
         setFormData(prev => ({
             ...prev,
             [name]: (name === 'gpa' || name === 'sat_score' || name === 'act_score' || name === 'graduation_year' || name === 'current_grade')
-                ? parseFloat(value) || 0
+                ? (value === '' ? null : parseFloat(value))
                 : value
         }));
     };

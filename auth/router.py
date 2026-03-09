@@ -116,8 +116,8 @@ def verify_email(payload: EmailVerification, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
 @router.post("/login", response_model=Token)
-@limiter.limit("5/15minutes")
-def login(request: Request, login_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("100/15minutes")
+def login_form(request: Request, login_data: UserCreate, db: Session = Depends(get_db)):
     # Reusing UserCreate for email/password structure, or we can use OAuth2PasswordRequestForm
     # User specified accepting email and password, so checking UserCreate
     # Wait, UserCreate has more requirements. Let's create a dynamic check or use OAuth2PasswordRequestForm.
@@ -131,8 +131,8 @@ class UserLogin(BaseModel):
     password: str
 
 @router.post("/login-json", response_model=Token)
-@limiter.limit("5/15minutes")
-def login(request: Request, login_data: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("100/15minutes")
+def login_json(request: Request, login_data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == login_data.email).first()
     if not user or not verify_password(login_data.password, user.password_hash):
         raise HTTPException(

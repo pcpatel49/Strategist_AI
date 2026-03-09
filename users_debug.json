@@ -1,0 +1,12 @@
+[
+    {
+        "email": "test.create@adaniuni.ac.in",
+        "hash": "$2b$12$lBEpSlXK3H1J1aDm0V75f.xNYGed2AdQvXMt6cH5P/xQpUXYg2Kha",
+        "verified": true
+    },
+    {
+        "email": "test.rate.limit@adaniuni.ac.in",
+        "hash": "$2b$12$I0rVaNFPFPjSJucqxdVSget66f01xBMSNDjf4SavuqXBlr1ORD/D.",
+        "verified": true
+    }
+]

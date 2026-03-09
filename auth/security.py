@@ -5,6 +5,7 @@ from jose import jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from database.models import BlacklistedToken
+import uuid
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -25,18 +26,18 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "jti": uuid.uuid4().hex})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 def create_verification_token(email: str):
     expire = datetime.utcnow() + timedelta(hours=24)
-    to_encode = {"sub": email, "type": "verification", "exp": expire}
+    to_encode = {"sub": email, "type": "verification", "exp": expire, "jti": uuid.uuid4().hex}
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def create_password_reset_token(email: str):
     expire = datetime.utcnow() + timedelta(hours=1)
-    to_encode = {"sub": email, "type": "reset", "exp": expire}
+    to_encode = {"sub": email, "type": "reset", "exp": expire, "jti": uuid.uuid4().hex}
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def is_token_blacklisted(db: Session, token: str):
